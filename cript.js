@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
 🛡 Камсыздандыруу: ${data.insurance ? "Ооба" : "Жок"}
       `.trim();
 
-      const whatsappNumber = "996550000000"; // ⬅️ өз номериң
+      const whatsappNumber = "996505564252"; // ⬅️ өз номериң
       const whatsappURL =
         `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
