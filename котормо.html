@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>500 Сөз – Англисче окуу артында</title>
+  <title>Англисче жаттоо – Толук версия</title>
   <style>
     :root {
       --bg: #f9fafb;
@@ -29,234 +29,465 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 1rem;
+      padding: 0;
       touch-action: manipulation;
     }
-    .container { max-width: 100%; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 1rem; }
-    h1 { font-size: 1.7rem; margin-bottom: 0.5rem; }
-    .mode-btn {
-      background: var(--card);
-      border: 1px solid var(--light-gray);
-      padding: 0.5rem 1rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
 
-    .categories {
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: var(--card);
+      padding: 0.8rem 1rem;
       display: flex;
-      overflow-x: auto;
-      padding: 0.8rem 0;
-      margin-bottom: 1rem;
-      gap: 0.6rem;
-      scrollbar-width: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
+    .hamburger { font-size: 1.8rem; cursor: pointer; padding: 0.5rem; }
+    h1 { font-size: 1.4rem; margin: 0; }
+
+    .side-menu {
+      position: fixed;
+      top: 0; left: -280px;
+      width: 280px; height: 100%;
+      background: var(--card);
+      box-shadow: 2px 0 15px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 999;
+      padding-top: 5rem;
+      overflow-y: auto;
+    }
+    .side-menu.open { left: 0; }
+    .menu-item {
+      display: block;
+      padding: 1.2rem 1.5rem;
+      font-size: 1.1rem;
+      color: var(--text);
+      border-bottom: 1px solid var(--light-gray);
+      cursor: pointer;
+    }
+    .menu-item:hover, .menu-item.active { background: rgba(99,102,241,0.1); color: var(--accent); }
+
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 998;
+      display: none;
+    }
+    .overlay.show { display: block; }
+
+    .main-content { padding-top: 4.5rem; padding-bottom: 1rem; }
+
+    .categories { 
+      display: none; /* демейде жашырылган, сөз бөлүмүндө гана көрсөтүлөт */
+      flex-wrap: nowrap; overflow-x: auto; padding: 0.8rem 1rem; gap: 0.6rem;
+      scrollbar-width: none; margin-bottom: 1rem;
+    }
+    .categories.show { display: flex; }
     .categories::-webkit-scrollbar { display: none; }
     .cat-btn {
-      flex-shrink: 0;
-      padding: 0.7rem 1.2rem;
-      font-size: 1rem;
-      background: var(--light-gray);
-      border: none;
-      border-radius: 999px;
-      cursor: pointer;
-      white-space: nowrap;
-      color: var(--text);
-      transition: all 0.2s;
+      flex-shrink: 0; padding: 0.6rem 1.1rem; font-size: 0.95rem;
+      background: var(--light-gray); border: none; border-radius: 999px;
+      cursor: pointer; color: var(--text);
     }
-    .cat-btn.active {
-      background: var(--nav-active);
-      color: white;
-    }
+    .cat-btn.active { background: var(--nav-active); color: white; }
 
     .flashcard {
-      perspective: 1000px;
-      height: 55vh;
-      max-height: 420px;
-      margin: 0.8rem auto;
-      border-radius: 1.5rem;
-      overflow: hidden;
+      perspective: 1000px; height: 52vh; max-height: 400px;
+      margin: 0.8rem 1rem; border-radius: 1.5rem; overflow: hidden;
       box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     }
     .card-inner {
-      width: 100%; height: 100%;
-      position: relative;
-      transition: transform 0.5s ease;
-      transform-style: preserve-3d;
+      width: 100%; height: 100%; position: relative;
+      transition: transform 0.5s ease; transform-style: preserve-3d;
     }
     .card-inner.flipped { transform: rotateY(180deg); }
     .card-face {
-      position: absolute;
-      width: 100%; height: 100%;
-      backface-visibility: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 1.2rem;
-      border-radius: 1.5rem;
-      background: var(--card);
-      font-size: 2.4rem;
-      font-weight: 600;
-      text-align: center;
+      position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 1.2rem; border-radius: 1.5rem; background: var(--card);
+      font-size: 2.4rem; font-weight: 600; text-align: center;
     }
     .card-back {
-      background: var(--accent);
-      color: white;
-      transform: rotateY(180deg);
-      font-size: 2.3rem;
+      background: var(--accent); color: white; transform: rotateY(180deg); font-size: 2.3rem;
     }
 
     .speak-btn {
-      margin-top: 1.5rem;
-      padding: 0.8rem 2rem;
-      font-size: 1.2rem;
-      background: #8b5cf6;
-      color: white;
-      border: none;
-      border-radius: 1rem;
-      cursor: pointer;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-      display: none; /* алдыңкы бетте көрүнбөйт */
+      margin-top: 1.5rem; padding: 0.8rem 2rem; font-size: 1.2rem;
+      background: #8b5cf6; color: white; border: none; border-radius: 1rem;
+      cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      display: none;
     }
-    .card-inner.flipped .speak-btn { display: block; } /* артында гана көрүнөт */
+    .card-inner.flipped .speak-btn { display: block; }
 
     .flip-area { text-align: center; margin: 1rem 0; }
     .flip-btn {
-      padding: 1rem 2.5rem;
-      font-size: 1.3rem;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 1rem;
+      padding: 1rem 2.5rem; font-size: 1.3rem;
+      background: var(--accent); color: white; border: none; border-radius: 1rem;
       cursor: pointer;
     }
 
     .nav-actions {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      margin-top: 1.2rem;
+      display: flex; justify-content: center; gap: 1.5rem; margin: 1.2rem 0;
     }
     .nav-btn {
-      width: 70px;
-      height: 70px;
-      font-size: 2.2rem;
-      background: var(--gray);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s;
+      width: 70px; height: 70px; font-size: 2.2rem;
+      background: var(--gray); color: white; border: none; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    .nav-btn:active {
-      transform: scale(0.92);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    .nav-btn:active { transform: scale(0.92); }
+
+    .section-content { padding: 1rem; }
+    .grammar-topic, .movie-item {
+      margin-bottom: 1.5rem; padding: 1.2rem; background: var(--light-gray);
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <h1>500 Сөз</h1>
-    <button class="mode-btn" onclick="document.body.classList.toggle('dark')">🌙 / ☀️</button>
-  </header>
+<header>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <h1>Англисче жаттоо</h1>
+  <button class="mode-btn" onclick="document.body.classList.toggle('dark')">🌙</button>
+</header>
 
-  <div class="categories" id="categories">
-    <button class="cat-btn active" data-cat="all" onclick="changeCategory('all')">Баары</button>
-    <button class="cat-btn" data-cat="greetings" onclick="changeCategory('greetings')">Саламдашуу</button>
-    <button class="cat-btn" data-cat="family" onclick="changeCategory('family')">Үй-бүлө</button>
-    <button class="cat-btn" data-cat="food" onclick="changeCategory('food')">Тамак-аш</button>
-    <button class="cat-btn" data-cat="daily" onclick="changeCategory('daily')">Күнүмдүк</button>
-    <button class="cat-btn" data-cat="numbers" onclick="changeCategory('numbers')">Сандар</button>
-    <button class="cat-btn" data-cat="time" onclick="changeCategory('time')">Убакыт</button>
-  </div>
+<div class="side-menu" id="sideMenu">
+  <div class="menu-item active" onclick="showSection('soz')">Сөз</div>
+  <div class="menu-item" onclick="showSection('grammatika')">Грамматика</div>
+  <div class="menu-item" onclick="showSection('kino')">Кино</div>
+  <div class="menu-item" onclick="showSection('konuguu')">Көнүгүү</div>
+</div>
 
-  <div class="flashcard">
-    <div class="card-inner" id="card">
-      <div class="card-face front">
-        <div id="kgDisplay">Салам</div>
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="main-content" id="mainContent">
+
+  <!-- Сөз бөлүму -->
+  <div id="sozSection">
+    <div class="categories show" id="categories">
+      <button class="cat-btn active" data-cat="all" onclick="changeCategory('all')">Баары</button>
+      <button class="cat-btn" data-cat="greetings" onclick="changeCategory('greetings')">Саламдашуу</button>
+      <button class="cat-btn" data-cat="family" onclick="changeCategory('family')">Үй-бүлө</button>
+      <button class="cat-btn" data-cat="food" onclick="changeCategory('food')">Тамак-аш</button>
+      <button class="cat-btn" data-cat="daily" onclick="changeCategory('daily')">Күнүмдүк</button>
+      <button class="cat-btn" data-cat="numbers" onclick="changeCategory('numbers')">Сандар</button>
+      <button class="cat-btn" data-cat="time" onclick="changeCategory('time')">Убакыт</button>
+    </div>
+
+    <div class="flashcard">
+      <div class="card-inner" id="card">
+        <div class="card-face front">
+          <div id="kgDisplay">Салам</div>
+        </div>
+        <div class="card-face card-back">
+          <div id="engDisplay">Hello</div>
+          <button class="speak-btn" onclick="speakEnglish()">🔊 Англисче оку</button>
+        </div>
       </div>
-      <div class="card-face card-back">
-        <div id="engDisplay">Hello</div>
-        <button class="speak-btn" onclick="speakEnglish()">🔊 Англисче оку</button>
-      </div>
+    </div>
+
+    <div class="flip-area">
+      <button class="flip-btn" onclick="flipCard()">Буруу</button>
+    </div>
+
+    <div class="nav-actions">
+      <button class="nav-btn" onclick="prevCard()">←</button>
+      <button class="nav-btn" onclick="nextCard()">→</button>
     </div>
   </div>
 
-  <div class="flip-area">
-    <button class="flip-btn" onclick="flipCard()">Буруу</button>
+  <!-- Грамматика бөлүму -->
+  <div id="grammatikaSection" class="section-content" style="display:none;">
+    <h2 style="text-align:center; margin:1rem 0 2rem;">Негизги грамматика темалары</h2>
+
+    <div class="grammar-topic">
+      <h3>1. To be (болуу)</h3>
+      <p>I <strong>am</strong> – Менмин<br>
+         You <strong>are</strong> – Сенсиң / Сизсиз<br>
+         He/She/It <strong>is</strong> – Ал (эркек/аял/нерсе)</p>
+      <p>Мисал: I am happy. – Мен бактылуумун.</p>
+    </div>
+
+    <div class="grammar-topic">
+      <h3>2. Present Simple</h3>
+      <p>Күнүмдүк адаттар, факттар</p>
+      <p>I/You/We/They + глагол<br>He/She/It + глагол + s/es</p>
+      <p>Мисал: She speaks English. – Ал англисче сүйлөйт.</p>
+    </div>
+
+    <div class="grammar-topic">
+      <h3>3. Present Continuous</h3>
+      <p>Азыр болуп жаткан иш-аракет</p>
+      <p>am/is/are + глагол + ing</p>
+      <p>Мисал: I am reading now. – Мен азыр окуп жатам.</p>
+    </div>
+
+    <div class="grammar-topic">
+      <h3>4. Past Simple</h3>
+      <p>Бүткөн иш-аракеттер</p>
+      <p>глагол + ed / 2-форма</p>
+      <p>Мисал: Yesterday I went home. – Кечээ үйгө бардым.</p>
+    </div>
+
+    <div class="grammar-topic">
+      <h3>5. Future Simple (will)</h3>
+      <p>Келечектеги пландар/божомолдор</p>
+      <p>will + глагол</p>
+      <p>Мисал: Tomorrow I will call you. – Эртең сага чалам.</p>
+    </div>
+
+    <div class="grammar-topic">
+      <h3>6. There is / There are</h3>
+      <p>There is a cat. – Мышык бар.<br>There are three books. – Үч китеп бар.</p>
+    </div>
+
+    <div class="grammar-topic">
+      <h3>7. This / That / These / Those</h3>
+      <p>This book (жакын) – Бул китеп<br>That car (алыс) – Тигил машина</p>
+    </div>
+
+    <div class="grammar-topic">
+      <h3>8. Possessive adjectives</h3>
+      <p>my, your, his, her, its, our, their</p>
+      <p>My phone – Менин телефоным</p>
+    </div>
+
+    <p style="text-align:center; margin:2rem 0;">Көбүрөөк темаларды кошкуңуз келсе айтыңыз!</p>
   </div>
 
-  <div class="nav-actions">
-    <button class="nav-btn" onclick="prevCard()">←</button>
-    <button class="nav-btn" onclick="nextCard()">→</button>
+  <!-- Кино бөлүму -->
+  <div id="kinoSection" class="section-content" style="display:none;">
+    <h2 style="text-align:center; margin-bottom:1.5rem;">Жеңил жана жакшы англисче тасмалар</h2>
+
+    <div class="movie-item">
+      <h3>1. The Lion King (1994)</h3>
+      <p>Деңгээл: A1–A2 | Анимация, ырлар, жөнөкөй сөздөр</p>
+    </div>
+    <div class="movie-item">
+      <h3>2. Toy Story (1995)</h3>
+      <p>Деңгээл: A2 | Балдарга да, чоңдорго да жакшы</p>
+    </div>
+    <div class="movie-item">
+      <h3>3. Finding Nemo (2003)</h3>
+      <p>Деңгээл: A2–B1 | Суу алдындагы дүйнө, жөнөкөй диалогдор</p>
+    </div>
+    <div class="movie-item">
+      <h3>4. Forrest Gump (1994)</h3>
+      <p>Деңгээл: B1 | Жашоо окуясы, көп күнүмдүк сөздөр</p>
+    </div>
+    <div class="movie-item">
+      <h3>5. Friends (сериал, 1994–2004)</h3>
+      <p>Деңгээл: B1 | Эң мыкты үйрөнүү сериалы, юмор + күнүмдүк сүйлөшүү</p>
+    </div>
+    <div class="movie-item">
+      <h3>6. The Princess Diaries (2001)</h3>
+      <p>Деңгээл: B1 | Жеңил комедия, жаштар жөнүндө</p>
+    </div>
+    <div class="movie-item">
+      <h3>7. Ratatouille (2007)</h3>
+      <p>Деңгээл: A2–B1 | Ашпозчулук + жакшы сөздөр</p>
+    </div>
+    <div class="movie-item">
+      <h3>8. Up (2009)</h3>
+      <p>Деңгээл: A2 | Эмоционалдуу, жөнөкөй диалогдор</p>
+    </div>
+    <div class="movie-item">
+      <h3>9. Harry Potter and the Sorcerer's Stone (2001)</h3>
+      <p>Деңгээл: B1 | Сыйкырдуу дүйнө, көп сөз кайталанат</p>
+    </div>
+    <div class="movie-item">
+      <h3>10. The Secret Life of Pets (2016)</h3>
+      <p>Деңгээл: A2 | Күлкүлүү, жаныбарлар жөнүндө</p>
+    </div>
+
+    <p style="text-align:center; margin-top:2rem;">
+      Баарын YouTube же Netflix'тен англисче субтитр менен көрүңүз.
+    </p>
   </div>
+
+  <!-- Көнүгүү бөлүму (placeholder) -->
+  <div id="konuguuSection" class="section-content" style="display:none; text-align:center; padding:2rem;">
+    <h2>Көнүгүү</h2>
+    <p>Бул жерге төмөнкүлөр келет:</p>
+    <ul style="list-style:none; margin:1.5rem 0; line-height:2;">
+      <li>• Сөздөрдү дал келтирүү</li>
+      <li>• Сүйлөмдөрдү толуктоо</li>
+      <li>• Угуу менен жооп берүү</li>
+      <li>• Flashcard тесттери</li>
+      <li>• Грамматика көнүгүүлөрү</li>
+    </ul>
+    <p>Азыр даярдалган жок. Кийинчерээк толуктайбыз.</p>
+  </div>
+
 </div>
 
 <script>
-// Сөздөр мисалы (категориялар боюнча, 500гө жеткирүү үчүн толуктоо керек)
+// Меню ачуу/жабуу
+function toggleMenu() {
+  document.getElementById("sideMenu").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("show");
+}
+
+// Бөлүмдөрдү көрсөтүү
+function showSection(section) {
+  document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+  event.target.classList.add('active');
+
+  document.getElementById("sozSection").style.display = section === 'soz' ? 'block' : 'none';
+  document.getElementById("grammatikaSection").style.display = section === 'grammatika' ? 'block' : 'none';
+  document.getElementById("kinoSection").style.display = section === 'kino' ? 'block' : 'none';
+  document.getElementById("konuguuSection").style.display = section === 'konuguu' ? 'block' : 'none';
+
+  // Категорияларды сөз бөлүмүндө гана көрсөтүү
+  document.querySelector(".categories").classList.toggle("show", section === 'soz');
+
+  toggleMenu();
+}
+
+// Сөз бөлүму логикасы
 const vocabulary = {
   all: [
-    { kg: "Салам", eng: "Hello" },
-    { kg: "Рахмат", eng: "Thank you" },
-    { kg: "Суу", eng: "Water" },
-    { kg: "Үй", eng: "House" },
-    { kg: "Ата", eng: "Father" },
-    { kg: "Эне", eng: "Mother" },
-    { kg: "Бир", eng: "One" },
-    { kg: "Эки", eng: "Two" },
-    { kg: "Бүгүн", eng: "Today" },
-    { kg: "Эртең", eng: "Tomorrow" }
-    // ... калган сөздөрдү кош
+    { kg: "мен", eng: "I" },
+    { kg: "сен", eng: "you" },
+    { kg: "ал", eng: "he/she/it" },
+    { kg: "биз", eng: "we" },
+    { kg: "алар", eng: "they" },
+    { kg: "бул", eng: "this" },
+    { kg: "ошол", eng: "that" },
+    { kg: "жана", eng: "and" },
+    { kg: "жок", eng: "no/not" },
+    { kg: "ооба", eng: "yes" },
+    { kg: "суу", eng: "water" },
+    { kg: "үй", eng: "house" },
+    { kg: "тамак", eng: "food" },
+    { kg: "убакыт", eng: "time" },
+    { kg: "күн", eng: "day" },
+    { kg: "түн", eng: "night" },
+    { kg: "жаңы", eng: "new" },
+    { kg: "эски", eng: "old" },
+    { kg: "жакшы", eng: "good" },
+    { kg: "жаман", eng: "bad" },
+    { kg: "чоң", eng: "big" },
+    { kg: "кичине", eng: "small" },
+    { kg: "бир", eng: "one" },
+    { kg: "эки", eng: "two" },
+    { kg: "үч", eng: "three" },
+    { kg: "төрт", eng: "four" },
+    { kg: "беш", eng: "five" },
+    { kg: "алты", eng: "six" },
+    { kg: "жети", eng: "seven" },
+    { kg: "сегиз", eng: "eight" },
+    { kg: "тогуз", eng: "nine" },
+    { kg: "он", eng: "ten" },
+    { kg: "салам", eng: "hello" },
+    { kg: "кош бол", eng: "goodbye" },
+    { kg: "рахмат", eng: "thank you" },
+    { kg: "сураныч", eng: "please" },
+    { kg: "кечиресиз", eng: "sorry" },
+    { kg: "ата", eng: "father" },
+    { kg: "эне", eng: "mother" },
+    { kg: "уул", eng: "son" },
+    { kg: "кыз", eng: "daughter" },
+    { kg: "дос", eng: "friend" },
+    { kg: "сүйүү", eng: "love" },
+    { kg: "бактылуу", eng: "happy" },
+    { kg: "кайгылуу", eng: "sad" },
+    { kg: "ачка", eng: "hungry" },
+    { kg: "суусаган", eng: "thirsty" },
+    { kg: "ысык", eng: "hot" },
+    { kg: "суук", eng: "cold" },
+    { kg: "бүгүн", eng: "today" },
+    { kg: "эртең", eng: "tomorrow" },
+    { kg: "кечээ", eng: "yesterday" },
+    { kg: "эртең менен", eng: "morning" },
+    { kg: "кеч", eng: "evening" },
+    { kg: "жумуш", eng: "work" },
+    { kg: "мектеп", eng: "school" },
+    { kg: "китеп", eng: "book" },
+    { kg: "машина", eng: "car" },
+    { kg: "акча", eng: "money" },
+    { kg: "сатып алуу", eng: "buy" },
+    { kg: "сатуу", eng: "sell" },
+    { kg: "дүкөн", eng: "shop" },
+    { kg: "шаар", eng: "city" },
+    { kg: "айыл", eng: "village" },
+    { kg: "жол", eng: "road" },
+    { kg: "телефон", eng: "phone" },
+    { kg: "интернет", eng: "internet" },
+    { kg: "компьютер", eng: "computer" },
+    { kg: "саат", eng: "hour" },
+    { kg: "мүнөт", eng: "minute" },
+    { kg: "жыл", eng: "year" },
+    { kg: "ай", eng: "month" },
+    { kg: "жума", eng: "week" },
+    { kg: "жаан", eng: "rain" },
+    { kg: "кар", eng: "snow" },
+    { kg: "шамал", eng: "wind" },
+    { kg: "күн", eng: "sun" },
+    { kg: "асман", eng: "sky" },
+    { kg: "дарак", eng: "tree" },
+    { kg: "гүл", eng: "flower" },
+    { kg: "ит", eng: "dog" },
+    { kg: "мышык", eng: "cat" },
+    { kg: "куш", eng: "bird" },
+    { kg: "кызыл", eng: "red" },
+    { kg: "көк", eng: "blue" },
+    { kg: "жашыл", eng: "green" },
+    { kg: "сары", eng: "yellow" },
+    { kg: "кара", eng: "black" },
+    { kg: "ак", eng: "white" },
+    // ... калган сөздөрдү кошуп койсоңуз болот (жалпы 500 болушу керек)
   ],
   greetings: [
     { kg: "Салам", eng: "Hello" },
     { kg: "Кандайсың?", eng: "How are you?" },
     { kg: "Жакшымын", eng: "I'm fine" },
     { kg: "Кош бол", eng: "Goodbye" },
-    { kg: "Көрүшкөнчө", eng: "See you later" }
+    { kg: "Көрүшкөнчө", eng: "See you later" },
+    { kg: "Жакшы түн", eng: "Good night" }
   ],
   family: [
     { kg: "Ата", eng: "Father" },
     { kg: "Эне", eng: "Mother" },
     { kg: "Уул", eng: "Son" },
     { kg: "Кыз", eng: "Daughter" },
-    { kg: "Дос", eng: "Friend" }
+    { kg: "Бир тууган", eng: "Sibling" },
+    { kg: "Чоң ата", eng: "Grandfather" }
   ],
   food: [
     { kg: "Нан", eng: "Bread" },
     { kg: "Эт", eng: "Meat" },
     { kg: "Алма", eng: "Apple" },
     { kg: "Чай", eng: "Tea" },
-    { kg: "Сүт", eng: "Milk" }
+    { kg: "Сүт", eng: "Milk" },
+    { kg: "Күрүч", eng: "Rice" }
   ],
   daily: [
     { kg: "Жумуш", eng: "Work" },
     { kg: "Мектеп", eng: "School" },
     { kg: "Китеп", eng: "Book" },
     { kg: "Телефон", eng: "Phone" },
-    { kg: "Акча", eng: "Money" }
+    { kg: "Акча", eng: "Money" },
+    { kg: "Уйку", eng: "Sleep" }
   ],
   numbers: [
     { kg: "Бир", eng: "One" },
     { kg: "Эки", eng: "Two" },
     { kg: "Үч", eng: "Three" },
     { kg: "Төрт", eng: "Four" },
-    { kg: "Беш", eng: "Five" }
+    { kg: "Беш", eng: "Five" },
+    { kg: "Он", eng: "Ten" }
   ],
   time: [
     { kg: "Бүгүн", eng: "Today" },
     { kg: "Эртең", eng: "Tomorrow" },
     { kg: "Кечээ", eng: "Yesterday" },
     { kg: "Саат", eng: "Hour" },
-    { kg: "Мүнөт", eng: "Minute" }
+    { kg: "Мүнөт", eng: "Minute" },
+    { kg: "Жыл", eng: "Year" }
   ]
 };
 
@@ -286,10 +517,9 @@ function speakEnglish() {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     utterance.rate = 1.0;
-    utterance.pitch = 1.0;
     speechSynthesis.speak(utterance);
   } else {
-    alert("Браузериңиз аудиону колдобойт. Chrome колдонуңуз.");
+    alert("Аудио колдоого алынбайт");
   }
 }
 
