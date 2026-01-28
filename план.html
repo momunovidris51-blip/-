@@ -1,779 +1,456 @@
 <!DOCTYPE html>
 <html lang="ky">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ыңгайлуу План Түзүүчү Сайт менен Гамбургер Меню</title>
-    <!-- Google Fonts: Жакшыраак жана окууга ыңгайлуу шрифттер үчүн (Roboto) -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome: Иконкалар үчүн (меню, календарь, саат, статистика) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js: Статистика графиктери үчүн (пирог чарттар) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Глобалдык стилдер: Түстөр, шрифттер, аралыктарды окууга ыңгайлуу кылуу үчүн */
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f7fa; /* Ачык фон, көзгө жумшак */
-            color: #333333; /* Кара текст, жакшы контраст */
-            transition: background-color 0.3s, color 0.3s;
-            line-height: 1.6; /* Текст аралыгы окууга ыңгайлуу */
-        }
-        h1, h2, h3, h4 {
-            color: #1a73e8; /* Көк түс, Google-style, жакшы көрүнөт */
-            font-weight: 500; /* Орто калыңдык, окууга ыңгайлуу */
-        }
-        .container {
-            max-width: 1200px; /* Чоң экран үчүн чек */
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .section {
-            display: none; /* Башында жашырылган, меню аркылуу көрсөтүлөт */
-            margin: 20px 0;
-            padding: 25px; /* Ичиндеги аралыкты чоңойттук, ыңгайлуулук үчүн */
-            background: #ffffff; /* Ак фон, таза көрүнөт */
-            border-radius: 16px; /* Тегерек бурчтар, заманбап дизайн */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Жумшак көлөкө */
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .section.active {
-            display: block; /* Активдүү бөлүм көрсөтүлөт */
-        }
-        .section:hover {
-            transform: translateY(-3px); /* Hover эффект, интерактивдүү */
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
-        }
-        .input-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px; /* Аралыкты чоңойттук, тийип калбаш үчүн */
-            margin-bottom: 25px;
-        }
-        input[type="text"], input[type="date"], input[type="time"] {
-            flex: 1;
-            min-width: 180px; /* Минималдуу тууралык, мобилдикте ыңгайлуу */
-            padding: 14px; /* Ичиндеги аралык чоң, тийүүгө ыңгайлуу */
-            border: 1px solid #d1d1d1; /* Жеңил чек */
-            border-radius: 8px;
-            font-size: 1.1em; /* Текст чоң, окууга жеңил */
-            transition: border-color 0.3s;
-        }
-        input:focus {
-            border-color: #1a73e8; /* Фокус түсү, колдонуучунун көңүлүн бурат */
-            outline: none;
-        }
-        button {
-            padding: 14px 24px; /* Чоң кнопкалар, тийүүгө ыңгайлуу (мобилдик үчүн) */
-            background: #1a73e8; /* Көк түс, активдүү көрүнөт */
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background 0.3s, transform 0.2s;
-        }
-        button:hover {
-            background: #0d5bdd; /* Караңгыраак көк, hover эффект */
-            transform: scale(1.03); /* Чоңоюу эффект */
-        }
-        .delete {
-            background: #ea4335; /* Кызыл түс, өчүрүү үчүн */
-        }
-        .delete:hover {
-            background: #c5221f;
-        }
-        .export-btn {
-            background: #34a853; /* Жашыл, жүктөө үчүн */
-        }
-        .export-btn:hover {
-            background: #2e8b47;
-        }
-        .import-btn {
-            background: #fbbc05; /* Сары, жүктөө үчүн */
-            padding: 14px 24px;
-            color: #333;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1em;
-            display: inline-block;
-            transition: background 0.3s, transform 0.2s;
-        }
-        .import-btn:hover {
-            background: #f9a825;
-            transform: scale(1.03);
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px; /* Чоң аралык */
-            background: #f9f9f9;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            transition: background 0.3s, transform 0.2s;
-            font-size: 1.1em; /* Чоң текст */
-        }
-        li:hover {
-            background: #e8f0fe; /* Жеңил көк hover */
-            transform: translateX(3px);
-        }
-        li.completed {
-            background: #e6f4ea; /* Жашыл, толукталган үчүн */
-            text-decoration: line-through;
-            color: #6b6b6b;
-        }
-        li .task-text {
-            flex: 1;
-        }
-        li .task-date, li .task-time {
-            font-size: 0.95em;
-            color: #757575; /* Боз текст, көзгө жумшак */
-            margin-left: 10px;
-        }
-        li .actions {
-            display: flex;
-            gap: 15px; /* Кнопкалар аралыгы чоң */
-        }
-        .progress-bar {
-            width: 100%;
-            background: #e0e0e0;
-            border-radius: 8px;
-            height: 14px; /* Чоңураак бар */
-            margin-top: 20px;
-        }
-        .progress-fill {
-            height: 100%;
-            background: #34a853; /* Жашыл прогресс */
-            border-radius: 8px;
-            transition: width 0.5s ease-in-out;
-        }
-        /* Статистика бөлүмү: Ар бир бөлүмгө өзүнчө, окууга ыңгайлуу */
-        .section-stats {
-            background: #f1f3f5; /* Жеңил фон */
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* Responsive grid */
-            gap: 20px;
-        }
-        .stat-card {
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .stat-card h4 {
-            font-size: 1em;
-            margin-bottom: 8px;
-            color: #5f6368;
-        }
-        .stat-card p {
-            font-size: 1.8em;
-            color: #1a73e8; /* Көк сандар, көрүнүктүү */
-        }
-        .chart-container {
-            margin-top: 20px;
-            height: 250px; /* Чоң график, мобилдикте да көрүнөт */
-        }
-        /* Саат дисплейи: Жогору жакта, чоң текст */
-        #clock {
-            text-align: center;
-            font-size: 1.4em;
-            color: #5f6368;
-            margin: 20px 0;
-            padding: 10px;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        /* Гамбургер Меню: Түстөрдү жакшырттык, ачык жана көрүнүктүү */
-        .navbar {
-            background-color: #4285f4; /* Көк түс, Google-blue, жакшы көрүнөт */
-            padding: 16px 20px; /* Чоң аралык */
-            position: fixed;
-            width: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Көлөкө, тереңдик */
-        }
-        .navbar h1 {
-            color: #ffffff;
-            margin: 0;
-            font-size: 1.6em; /* Чоң заголовок */
-        }
-        .hamburger {
-            display: block;
-            cursor: pointer;
-            color: #ffffff;
-            font-size: 2em; /* Чоң иконка, тийүүгө ыңгайлуу */
-            transition: transform 0.3s;
-        }
-        .hamburger:hover {
-            transform: rotate(90deg); /* Анимация, интерактивдүү */
-        }
-        .nav-menu {
-            position: fixed;
-            top: 60px; /* Navbar астында */
-            left: -100%;
-            width: 280px; /* Чоңураак меню, мобилдикте ыңгайлуу */
-            height: calc(100vh - 60px);
-            background: #ffffff; /* Ак фон, ачык көрүнөт */
-            transition: left 0.3s ease;
-            padding: 25px;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.15);
-            overflow-y: auto; /* Узунураак меню үчүн скролл */
-        }
-        .nav-menu.active {
-            left: 0;
-        }
-        .nav-menu ul {
-            padding: 0;
-            list-style: none;
-        }
-        .nav-menu li {
-            margin: 20px 0; /* Чоң аралык */
-        }
-        .nav-menu a {
-            color: #202124; /* Кара текст */
-            text-decoration: none;
-            font-size: 1.3em; /* Чоң текст */
-            display: flex;
-            align-items: center;
-            gap: 15px; /* Иконка менен текст аралыгы */
-            padding: 14px 20px;
-            border-radius: 8px;
-            transition: background 0.3s, color 0.3s;
-        }
-        .nav-menu a:hover {
-            background: #e8f0fe; /* Жеңил көк hover */
-            color: #1a73e8;
-        }
-        /* Теманы өзгөртүү: Караңгы режим үчүн түстөрдү жөнгө салдык */
-        body.dark-mode {
-            background-color: #202124;
-            color: #e8eaed;
-        }
-        body.dark-mode .section, body.dark-mode #clock, body.dark-mode .stat-card {
-            background: #303134;
-            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
-        }
-        body.dark-mode li {
-            background: #3c4043;
-        }
-        body.dark-mode li.completed {
-            background: #4d5156;
-        }
-        body.dark-mode input[type="text"], body.dark-mode input[type="date"], body.dark-mode input[type="time"] {
-            background: #3c4043;
-            border-color: #5f6368;
-            color: #e8eaed;
-        }
-        body.dark-mode .navbar {
-            background-color: #1a1d21;
-        }
-        body.dark-mode .nav-menu {
-            background: #303134;
-        }
-        body.dark-mode .nav-menu a {
-            color: #e8eaed;
-        }
-        body.dark-mode .nav-menu a:hover {
-            background: #3c4043;
-            color: #8ab4f8;
-        }
-        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
-            color: #8ab4f8;
-        }
-        body.dark-mode .progress-bar {
-            background: #5f6368;
-        }
-        body.dark-mode .progress-fill {
-            background: #34a853;
-        }
-        body.dark-mode .section-stats {
-            background: #3c4043;
-        }
-        /* Мобилдик responsive: Телефонго ылайыкташтыруу */
-        @media (max-width: 668px) {
-            .container {
-                padding: 12px;
-            }
-            .navbar {
-                padding: 8px 10px;
-            }
-            .nav-menu {
-                width: 60%; /* Толук экран, мобилдикте ыңгайлуу */
-                left: -80%;
-            }
-            .input-group {
-                flex-direction: column; /* Вертикалдуу, мобилдикте жеңил */
-                gap: 7px;
-            }
-            input[type="text"], input[type="date"], input[type="time"] {
-                width: 70%; /* Толук тууралык */
-            }
-            button, .import-btn {
-                width: 100%; /* Толук кнопкалар, тийүүгө ыңгайлуу */
-                margin-left: 0;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr; /* Бир колонка */
-            }
-            .chart-container {
-                height: 200px; /* Кичине график, мобилдикте */
-            }
-            li {
-                flex-direction: column; /* Вертикалдуу, узун текст үчүн */
-                align-items: flex-start;
-                gap: 15px;
-            }
-            li .actions {
-                width: 70%;
-                justify-content: flex-end;
-            }
-        }
-        /* Теманы өзгөртүү toggle: Менюда жайгашкан, ыңгайлуу */
-        .theme-toggle {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            color: #ffffff;
-            font-size: 1.1em;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Планер – Жеке</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    input, button, select {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .task-row {
+      transition: all 0.18s ease;
+    }
+    .task-row:active {
+      transform: scale(0.98);
+    }
+    .task-done {
+      opacity: 0.65;
+      text-decoration: line-through;
+      background: rgba(16,185,129,0.08);
+    }
+    .overdue {
+      border-left: 6px solid #ef4444;
+      background: rgba(239,68,68,0.06);
+    }
+    @media (max-width: 640px) {
+      .add-form {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .add-form > * {
+        min-height: 56px;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
 </head>
-<body>
-    <!-- Navbar: Фиксирленген жогору жакта, гамбургер менен -->
-    <div class="navbar">
-        <h1><i class="fas fa-calendar-alt"></i> План Түзүүчү</h1>
-        <div class="theme-toggle">
-            <label>Караңгы</label>
-            <label class="switch">
-                <input type="checkbox" id="themeSwitch">
-                <span class="slider"></span>
-            </label>
-        </div>
-        <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+
+<!-- Кирүү экраны – ар бир жолу сурайт (маймыл менен) -->
+<div id="loginScreen" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+    <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600 dark:text-indigo-400">
+      Планерге кириңиз
+    </h1>
+
+    <div class="space-y-6">
+      <div>
+        <label class="block text-xl mb-3 font-medium">Атыңыз</label>
+        <input id="nameInput" type="text" placeholder="Атыңызды жазыңыз" 
+               class="w-full px-5 py-5 text-xl border-2 dark:border-gray-600 rounded-2xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition" 
+               autocomplete="off" autofocus required />
+      </div>
+
+      <div class="relative">
+        <label class="block text-xl mb-3 font-medium">Сырсөз</label>
+        <input id="passInput" type="password" placeholder="Сырсөзүңүздү жазыңыз" 
+               class="w-full px-5 py-5 text-xl border-2 dark:border-gray-600 rounded-2xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition" 
+               autocomplete="off" required />
+        <!-- Маймыл эмодзи (көз алып салдым) -->
+        <span class="absolute right-5 top-12 text-3xl">🙈</span>
+      </div>
+
+      <button id="loginBtn" 
+              class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-2xl font-bold transition shadow-lg">
+        Кирүү
+      </button>
+
+      <p id="errorMsg" class="text-red-500 text-center text-lg hidden mt-2">
+        Атыңызды жана сырсөздү толтуруңуз
+      </p>
     </div>
-    <!-- Нав меню: Сол жактан чыгат, чоң иконкалар менен -->
-    <div class="nav-menu" id="navMenu">
-        <ul>
-            <li><a href="#" onclick="showSection('daily')"><i class="fas fa-sun"></i> Күнүмдүк</a></li>
-            <li><a href="#" onclick="showSection('weekly')"><i class="fas fa-calendar-week"></i> Апталык</a></li>
-            <li><a href="#" onclick="showSection('monthly')"><i class="fas fa-calendar"></i> Айлык</a></li>
-            <li><a href="#" onclick="showSection('yearly')"><i class="fas fa-calendar-check"></i> Жылдык</a></li>
-        </ul>
+  </div>
+</div>
+
+<!-- Негизги колдонмо -->
+<div id="mainApp" class="hidden">
+
+  <header class="bg-white dark:bg-gray-900/95 backdrop-blur sticky top-0 z-20 border-b dark:border-gray-800 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+        Планер
+      </h1>
+      <div class="flex items-center gap-4">
+        <div id="userNameDisplay" class="text-xl font-medium text-gray-700 dark:text-gray-300">
+          Салам, ...
+        </div>
+        <button id="themeBtn" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-2xl transition">
+          🌙
+        </button>
+      </div>
     </div>
+  </header>
 
-    <div class="container">
-        <!-- Саат: Реалタイム көрсөтүү, чоң жана таза -->
-        <div id="clock"></div>
+  <main class="max-w-5xl mx-auto px-4 py-6 sm:py-10">
 
-        <!-- Күнүмдүк бөлүм: Активдүү болсо көрүнөт -->
-        <div class="section active" id="daily"> <!-- Башында daily активдүү -->
-            <h2>Күнүмдүк Пландар</h2>
-            <div class="section-stats">
-                <h3><i class="fas fa-chart-bar"></i> Күнүмдүк Статистика</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Жалпы Тасктар</h4>
-                        <p id="dailyTotal">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Толукталган</h4>
-                        <p id="dailyCompleted">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Пайыз (%)</h4>
-                        <p id="dailyRate">0%</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Streak</h4>
-                        <p id="dailyStreak">0</p>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="dailyChart"></canvas>
-                </div>
-            </div>
-            <div class="input-group">
-                <input type="text" id="dailyInput" placeholder="Жаңы план кошуу...">
-                <input type="date" id="dailyDate">
-                <input type="time" id="dailyTime">
-                <button onclick="addTask('daily')"><i class="fas fa-plus"></i> Кошуу</button>
-                <button class="export-btn" onclick="exportTasks('daily')"><i class="fas fa-download"></i> Экспорт</button>
-                <label class="import-btn">
-                    <input type="file" accept=".json" style="display:none;" onchange="importTasks('daily', this.files[0])">
-                    <i class="fas fa-upload"></i> Импорт
-                </label>
-            </div>
-            <ul id="dailyList"></ul>
-            <div class="progress-bar"><div class="progress-fill" id="dailyProgress"></div></div>
-        </div>
-
-        <!-- Апталык бөлүм -->
-        <div class="section" id="weekly">
-            <h2>Апталык Пландар</h2>
-            <div class="section-stats">
-                <h3><i class="fas fa-chart-bar"></i> Апталык Статистика</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Жалпы Тасктар</h4>
-                        <p id="weeklyTotal">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Толукталган</h4>
-                        <p id="weeklyCompleted">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Пайыз (%)</h4>
-                        <p id="weeklyRate">0%</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Streak</h4>
-                        <p id="weeklyStreak">0</p>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="weeklyChart"></canvas>
-                </div>
-            </div>
-            <div class="input-group">
-                <input type="text" id="weeklyInput" placeholder="Жаңы план кошуу...">
-                <input type="date" id="weeklyDate">
-                <input type="time" id="weeklyTime">
-                <button onclick="addTask('weekly')"><i class="fas fa-plus"></i> Кошуу</button>
-                <button class="export-btn" onclick="exportTasks('weekly')"><i class="fas fa-download"></i> Экспорт</button>
-                <label class="import-btn">
-                    <input type="file" accept=".json" style="display:none;" onchange="importTasks('weekly', this.files[0])">
-                    <i class="fas fa-upload"></i> Импорт
-                </label>
-            </div>
-            <ul id="weeklyList"></ul>
-            <div class="progress-bar"><div class="progress-fill" id="weeklyProgress"></div></div>
-        </div>
-
-        <!-- Айлык бөлүм -->
-        <div class="section" id="monthly">
-            <h2>Айлык Пландар</h2>
-            <div class="section-stats">
-                <h3><i class="fas fa-chart-bar"></i> Айлык Статистика</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Жалпы Тасктар</h4>
-                        <p id="monthlyTotal">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Толукталган</h4>
-                        <p id="monthlyCompleted">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Пайыз (%)</h4>
-                        <p id="monthlyRate">0%</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Streak</h4>
-                        <p id="monthlyStreak">0</p>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </div>
-            <div class="input-group">
-                <input type="text" id="monthlyInput" placeholder="Жаңы план кошуу...">
-                <input type="date" id="monthlyDate">
-                <input type="time" id="monthlyTime">
-                <button onclick="addTask('monthly')"><i class="fas fa-plus"></i> Кошуу</button>
-                <button class="export-btn" onclick="exportTasks('monthly')"><i class="fas fa-download"></i> Экспорт</button>
-                <label class="import-btn">
-                    <input type="file" accept=".json" style="display:none;" onchange="importTasks('monthly', this.files[0])">
-                    <i class="fas fa-upload"></i> Импорт
-                </label>
-            </div>
-            <ul id="monthlyList"></ul>
-            <div class="progress-bar"><div class="progress-fill" id="monthlyProgress"></div></div>
-        </div>
-
-        <!-- Жылдык бөлүм -->
-        <div class="section" id="yearly">
-            <h2>Жылдык Пландар</h2>
-            <div class="section-stats">
-                <h3><i class="fas fa-chart-bar"></i> Жылдык Статистика</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Жалпы Тасктар</h4>
-                        <p id="yearlyTotal">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Толукталган</h4>
-                        <p id="yearlyCompleted">0</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Пайыз (%)</h4>
-                        <p id="yearlyRate">0%</p>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Streak</h4>
-                        <p id="yearlyStreak">0</p>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="yearlyChart"></canvas>
-                </div>
-            </div>
-            <div class="input-group">
-                <input type="text" id="yearlyInput" placeholder="Жаңы план кошуу...">
-                <input type="date" id="yearlyDate">
-                <input type="time" id="yearlyTime">
-                <button onclick="addTask('yearly')"><i class="fas fa-plus"></i> Кошуу</button>
-                <button class="export-btn" onclick="exportTasks('yearly')"><i class="fas fa-download"></i> Экспорт</button>
-                <label class="import-btn">
-                    <input type="file" accept=".json" style="display:none;" onchange="importTasks('yearly', this.files[0])">
-                    <i class="fas fa-upload"></i> Импорт
-                </label>
-            </div>
-            <ul id="yearlyList"></ul>
-            <div class="progress-bar"><div class="progress-fill" id="yearlyProgress"></div></div>
-        </div>
+    <!-- Көрүнүштөр -->
+    <div class="flex flex-wrap gap-3 mb-8 justify-center">
+      <button data-view="daily" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Күнүмдүк</button>
+      <button data-view="weekly" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Апталык</button>
+      <button data-view="monthly" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Айлык</button>
+      <button data-view="yearly" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Жылдык</button>
     </div>
 
-    <script>
-        // Глобалдык өзгөрмөлөр: Бөлүмдөрдү жана чарттарды сактоо
-        const sections = ['daily', 'weekly', 'monthly', 'yearly'];
-        const charts = {}; // Ар бир бөлүмгө өз чарт
+    <!-- Дата -->
+    <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl border dark:border-gray-800 shadow-md mb-8">
+      <input type="date" id="datePicker" class="w-full border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500"/>
+    </div>
 
-        // Саатты реалタイム жаңылоо функциясы
-        function updateClock() {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            document.getElementById('clock').textContent = now.toLocaleString('ky-KG', options);
-        }
-        setInterval(updateClock, 1000); // Ар бир секунда жаңылоо
+    <!-- Прогресс -->
+    <div class="mb-8 bg-white dark:bg-gray-900 p-6 rounded-2xl border dark:border-gray-800 shadow-md">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+        <h2 id="periodTitle" class="text-2xl sm:text-3xl font-bold"></h2>
+        <div class="flex items-center gap-5">
+          <span id="statsText" class="font-medium text-gray-600 dark:text-gray-400 text-xl"></span>
+          <div class="w-40 sm:w-56 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div id="progressBar" class="h-full bg-indigo-600 transition-all duration-500" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        // Менюну ачуу/жабуу функциясы
-        function toggleMenu() {
-            const menu = document.getElementById('navMenu');
-            menu.classList.toggle('active');
-        }
+    <!-- Тапшырма кошуу -->
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl border dark:border-gray-800 shadow-md mb-8 add-form grid gap-5">
+      <input id="taskInput" placeholder="Жаңы тапшырма жазыңыз..." 
+             class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500"/>
+      
+      <select id="prioritySelect" class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent">
+        <option value="low">Төмөн</option>
+        <option value="medium" selected>Орто</option>
+        <option value="high">Маанилүү</option>
+      </select>
 
-        // Бөлүмдү көрсөтүү функциясы: Башка бөлүмдөрдү жашырып, тандаганды көрсөтөт
-        function showSection(sectionId) {
-            sections.forEach(sec => {
-                document.getElementById(sec).classList.remove('active');
-            });
-            document.getElementById(sectionId).classList.add('active');
-            toggleMenu(); // Менюну автоматтык жабуу
-            updateSectionStats(sectionId); // Статистиканы жаңылоо
-        }
+      <select id="categorySelect" class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent">
+        <option value="work">Иш</option>
+        <option value="home">Үй</option>
+        <option value="study">Окуу</option>
+        <option value="personal">Жеке</option>
+        <option value="other" selected>Башка</option>
+      </select>
 
-        // Тасктарды localStorage'ден жүктөө жана UI'ди жаңылоо
-        function loadTasks(section) {
-            const tasks = JSON.parse(localStorage.getItem(section)) || [];
-            const list = document.getElementById(section + 'List');
-            list.innerHTML = '';
-            let completedCount = 0;
-            tasks.forEach((taskObj, index) => {
-                addTaskToList(section, taskObj, index);
-                if (taskObj.completed) completedCount++;
-            });
-            updateProgress(section, completedCount, tasks.length);
-            return { total: tasks.length, completed: completedCount };
-        }
+      <input type="date" id="deadlineInput" class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent"/>
 
-        // Жаңы таск кошуу функциясы: Инпуттардан маалымат алып, сактоо
-        function addTask(section) {
-            const input = document.getElementById(section + 'Input');
-            const dateInput = document.getElementById(section + 'Date');
-            const timeInput = document.getElementById(section + 'Time');
-            const task = input.value.trim();
-            const dueDate = dateInput.value;
-            const dueTime = timeInput.value;
-            if (task) {
-                const tasks = JSON.parse(localStorage.getItem(section)) || [];
-                const taskObj = { text: task, date: dueDate, time: dueTime, completed: false };
-                tasks.push(taskObj);
-                localStorage.setItem(section, JSON.stringify(tasks));
-                addTaskToList(section, taskObj, tasks.length - 1);
-                input.value = '';
-                dateInput.value = '';
-                timeInput.value = '';
-                updateSectionStats(section);
-                // Reminder орнотуу, эгер дата жана убакыт бар болсо
-                if (dueDate && dueTime && Notification.permission === 'granted') {
-                    setReminder(task, `${dueDate}T${dueTime}`);
-                } else if (dueDate && dueTime) {
-                    Notification.requestPermission().then(perm => {
-                        if (perm === 'granted') setReminder(task, `${dueDate}T${dueTime}`);
-                    });
-                }
-            }
-        }
+      <button id="addButton" class="py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xl font-bold transition shadow-lg">
+        Кошуу
+      </button>
+    </div>
 
-        // Таскты списокко кошуу функциясы: LI элемент түзүү
-        function addTaskToList(section, taskObj, index) {
-            const list = document.getElementById(section + 'List');
-            const li = document.createElement('li');
-            li.className = taskObj.completed ? 'completed' : '';
-            li.innerHTML = `
-                <span class="task-text">${taskObj.text}</span>
-                ${taskObj.date ? `<span class="task-date">(Дата: ${taskObj.date})</span>` : ''}
-                ${taskObj.time ? `<span class="task-time">(Убакыт: ${taskObj.time})</span>` : ''}
-                <div class="actions">
-                    <input type="checkbox" ${taskObj.completed ? 'checked' : ''} onclick="toggleComplete('${section}', ${index})">
-                    <button class="delete" onclick="deleteTask('${section}', ${index})"><i class="fas fa-trash"></i> Өчүрүү</button>
-                </div>
-            `;
-            list.appendChild(li);
-        }
+    <!-- Тапшырмалар -->
+    <div id="taskList" class="space-y-5 pb-24 min-h-[60vh]"></div>
 
-        // Толукталган статусун өзгөртүү функциясы
-        function toggleComplete(section, index) {
-            const tasks = JSON.parse(localStorage.getItem(section));
-            tasks[index].completed = !tasks[index].completed;
-            localStorage.setItem(section, JSON.stringify(tasks));
-            loadTasks(section);
-            updateSectionStats(section);
-            updateStreak(section);
-        }
+  </main>
 
-        // Таскты өчүрүү функциясы
-        function deleteTask(section, index) {
-            const tasks = JSON.parse(localStorage.getItem(section));
-            tasks.splice(index, 1);
-            localStorage.setItem(section, JSON.stringify(tasks));
-            loadTasks(section);
-            updateSectionStats(section);
-        }
+  <footer class="text-center py-8 text-base text-gray-500 dark:text-gray-600 border-t dark:border-gray-800">
+    Бардык маалыматтар сиздин түзмөгүңүздө гана сакталат • 2026
+  </footer>
 
-        // Прогресс барды жаңылоо функциясы
-        function updateProgress(section, completed, total) {
-            const progressFill = document.getElementById(section + 'Progress');
-            const percentage = total > 0 ? (completed / total) * 100 : 0;
-            progressFill.style.width = `${percentage}%`;
-        }
+</div>
 
-        // Ар бир бөлүмдүн статистикасын жаңылоо функциясы, чарт менен
-        function updateSectionStats(section) {
-            const stats = loadTasks(section);
-            const total = stats.total;
-            const completed = stats.completed;
-            const rate = total > 0 ? ((completed / total) * 100).toFixed(2) : 0;
-            document.getElementById(`${section}Total`).textContent = total;
-            document.getElementById(`${section}Completed`).textContent = completed;
-            document.getElementById(`${section}Rate`).textContent = `${rate}%`;
-            document.getElementById(`${section}Streak`).textContent = localStorage.getItem(`${section}Streak`) || 0;
+<script>
+// =====================================================
+// ГЛОБАЛДЫК ӨЗГӨРМӨЛӨР
+// =====================================================
+let currentView = 'daily';
+let selectedDate = new Date();
+let isDarkMode = localStorage.getItem('darkMode') === 'true';
+let currentUserName = '';
 
-            // Чартты жаңылоо
-            const ctx = document.getElementById(`${section}Chart`).getContext('2d');
-            if (charts[section]) charts[section].destroy();
-            charts[section] = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Толукталган', 'Калган'],
-                    datasets: [{
-                        data: [completed, total - completed],
-                        backgroundColor: ['#34a853', '#ea4335'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        title: { display: true, text: `${section.charAt(0).toUpperCase() + section.slice(1)} Прогресси` }
-                    }
-                }
-            });
-        }
+// =====================================================
+// DOM ЭЛЕМЕНТТЕР
+// =====================================================
+const dom = {
+  loginScreen: document.getElementById('loginScreen'),
+  nameInput: document.getElementById('nameInput'),
+  passInput: document.getElementById('passInput'),
+  eyeIcon: document.getElementById('eyeIcon'),
+  loginBtn: document.getElementById('loginBtn'),
+  errorMsg: document.getElementById('errorText'),
+  mainApp: document.getElementById('mainApp'),
+  userNameDisplay: document.getElementById('userNameDisplay'),
+  themeBtn: document.getElementById('themeBtn'),
+  datePicker: document.getElementById('datePicker'),
+  periodTitle: document.getElementById('periodTitle'),
+  statsText: document.getElementById('statsText'),
+  progressBar: document.getElementById('progressBar'),
+  taskList: document.getElementById('taskList'),
+  taskInput: document.getElementById('taskInput'),
+  prioritySelect: document.getElementById('prioritySelect'),
+  categorySelect: document.getElementById('categorySelect'),
+  deadlineInput: document.getElementById('deadlineInput'),
+  addButton: document.getElementById('addButton')
+};
 
-        // Streak'ти жаңылоо функциясы (үзгүлтүксүз күндөр)
-        function updateStreak(section) {
-            const today = new Date().toISOString().split('T')[0];
-            let streak = parseInt(localStorage.getItem(`${section}Streak`)) || 0;
-            const lastCompleted = localStorage.getItem(`${section}LastCompleted`);
-            if (lastCompleted === today) {
-                // Бүгүн мурунтан толукталган
-            } else if (new Date(lastCompleted).getTime() + 86400000 === new Date(today).getTime()) {
-                streak++;
-            } else {
-                streak = 1;
-            }
-            localStorage.setItem(`${section}Streak`, streak);
-            localStorage.setItem(`${section}LastCompleted`, today);
-            document.getElementById(`${section}Streak`).textContent = streak;
-        }
+// =====================================================
+// КИРҮҮ ЛОГИКАСЫ
+// =====================================================
+dom.loginBtn.addEventListener('click', () => {
+  const name = dom.nameInput.value.trim();
+  const password = dom.passInput.value.trim();
 
-        // Экспорт функциясы: JSON катары жүктөө
-        function exportTasks(section) {
-            const tasks = JSON.parse(localStorage.getItem(section)) || [];
-            const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${section}_tasks.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
+  if (!name || password.length < 4) {
+    dom.errorMsg.textContent = !name ? "Атыңызды жазыңыз" : "Сырсөз кеминде 4 белгиден турушу керек";
+    dom.errorMsg.classList.remove('hidden');
+    return;
+  }
 
-        // Импорт функциясы: JSON'дан окуу жана сактоо
-        function importTasks(section, file) {
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const tasks = JSON.parse(e.target.result);
-                        localStorage.setItem(section, JSON.stringify(tasks));
-                        loadTasks(section);
-                        updateSectionStats(section);
-                    } catch (error) {
-                        alert('JSON файлы туура эмес!');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        }
+  currentUserName = name;
+  dom.userNameDisplay.textContent = `Салам, ${currentUserName}`;
 
-        // Reminder функциясы: Браузер notification
-        function setReminder(task, dueDateTime) {
-            const dueTime = new Date(dueDateTime).getTime();
-            const now = Date.now();
-            const timeout = dueTime - now;
-            if (timeout > 0) {
-                setTimeout(() => {
-                    new Notification('План Эскертме', { body: `Мөөнөтү келди: ${task}` });
-                }, timeout);
-            }
-        }
+  dom.loginScreen.classList.add('hidden');
+  dom.mainApp.classList.remove('hidden');
 
-        // Теманы өзгөртүү: Караңгы/жарык режим
-        document.getElementById('themeSwitch').addEventListener('change', (e) => {
-            document.body.classList.toggle('dark-mode', e.target.checked);
-        });
+  initializePlanner();
+});
 
-        // Башында жүктөө: Биринчи бөлүмдү ачуу, саат, notification уруксаты
-        window.onload = () => {
-            showSection('daily'); // Башында күнүмдүк бөлүмдү көрсөт
-            updateClock();
-            if (Notification.permission !== 'granted') Notification.requestPermission();
-        };
-    </script>
+dom.passInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') dom.loginBtn.click();
+});
+
+dom.nameInput.focus();
+
+// =====================================================
+// КОЛДОНМОНУ БАШТОО
+// =====================================================
+function initializePlanner() {
+  applyTheme();
+  dom.datePicker.value = selectedDate.toISOString().slice(0, 10);
+  document.querySelector('[data-view="daily"]').dataset.active = 'true';
+  renderTasks();
+
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.dataset.active = 'false');
+      btn.dataset.active = 'true';
+      currentView = btn.dataset.view;
+      renderTasks();
+    });
+  });
+
+  dom.datePicker.addEventListener('change', () => {
+    selectedDate = new Date(dom.datePicker.value);
+    renderTasks();
+  });
+
+  dom.themeBtn.addEventListener('click', toggleTheme);
+
+  dom.addButton.addEventListener('click', addTask);
+  dom.taskInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') addTask();
+  });
+}
+
+function applyTheme() {
+  // Системанын караңгы/жарык режимине жараша автоматтык баштоо
+  if (localStorage.getItem('darkMode') === null) {
+    isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    localStorage.setItem('darkMode', isDarkMode);
+  }
+  document.documentElement.classList.toggle('dark', isDarkMode);
+  dom.themeBtn.textContent = isDarkMode ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  isDarkMode = !isDarkMode;
+  localStorage.setItem('darkMode', isDarkMode);
+  applyTheme();
+}
+
+// =====================================================
+// САКТОО КЛЮЧУ – АР БИР КОЛДОНУУЧУ ҮЧҮН ӨЗҮНЧӨ
+// =====================================================
+function getUserKey() {
+  const base = currentUserName.toLowerCase().replace(/\s+/g, '_');
+  const y = selectedDate.getFullYear();
+  const m = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+  const day = selectedDate.getDate().toString().padStart(2, '0');
+
+  let period = '';
+  if (currentView === 'daily')   period = `\( {y}- \){m}-${day}`;
+  else if (currentView === 'weekly')  period = `w\( {getWeek(selectedDate)}- \){y}`;
+  else if (currentView === 'monthly') period = `m\( {m}- \){y}`;
+  else period = `y${y}`;
+
+  return `plan_\( {base}_ \){currentView}_${period}`;
+}
+
+function getWeek(date) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return Math.round(((d - week1) / 86400000 + 1) / 7);
+}
+
+function getPeriodTitle() {
+  const d = new Date(selectedDate);
+  if (currentView === 'daily') return d.toLocaleDateString('ky-KG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  if (currentView === 'weekly') {
+    const start = new Date(d);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return `Апта — ${start.toLocaleDateString('ky-KG', {day:'numeric', month:'short'})} – ${end.toLocaleDateString('ky-KG', {day:'numeric', month:'short', year:'numeric'})}`;
+  }
+  if (currentView === 'monthly') return d.toLocaleDateString('ky-KG', { month: 'long', year: 'numeric' });
+  return `${d.getFullYear()} -жыл`;
+}
+
+// =====================================================
+// ТАПШЫРМАЛАР
+// =====================================================
+function loadTasks() {
+  const key = getUserKey();
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data).tasks || [] : [];
+}
+
+function saveTasks(tasks) {
+  const key = getUserKey();
+  localStorage.setItem(key, JSON.stringify({ tasks }));
+}
+
+function renderTasks() {
+  const tasks = loadTasks();
+
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  dom.periodTitle.textContent = getPeriodTitle();
+  dom.statsText.textContent = `${done} / ${total} • ${percent}%`;
+  dom.progressBar.style.width = `${percent}%`;
+
+  dom.taskList.innerHTML = total === 0 
+    ? '<p class="text-center py-20 text-gray-500 dark:text-gray-600 text-xl font-medium">Тапшырма жок...</p>'
+    : '';
+
+  const container = document.createElement('div');
+  container.className = 'space-y-5';
+
+  tasks.forEach((task, index) => {
+    const overdue = task.deadline && !task.done && new Date(task.deadline) < new Date();
+
+    const row = document.createElement('div');
+    row.className = `task-row flex flex-col sm:flex-row gap-5 p-6 rounded-2xl border dark:border-gray-800 bg-white dark:bg-gray-900 shadow-md ${task.done ? 'task-done' : ''} ${overdue ? 'overdue' : ''}`;
+
+    row.innerHTML = `
+      <div class="flex items-center gap-5 flex-1">
+        <input type="checkbox" ${task.done ? 'checked' : ''} class="w-7 h-7 rounded text-indigo-600 focus:ring-indigo-500"/>
+        <div class="flex-1">
+          <p class="text-xl font-medium">${task.text}</p>
+          ${task.deadline ? `<p class="text-base text-gray-500 dark:text-gray-400 mt-1">Мөөнөт: ${new Date(task.deadline).toLocaleDateString('ky-KG')}</p>` : ''}
+        </div>
+        <span class="px-4 py-2 text-base rounded-full font-medium whitespace-nowrap" 
+              style="background:rgba(\( {getCatColor(task.category)},0.2); color:rgb( \){getCatColor(task.category)})">
+          ${getCatName(task.category)}
+        </span>
+      </div>
+      <div class="flex gap-6 mt-4 sm:mt-0">
+        <button class="edit-btn text-blue-600 dark:text-blue-400 hover:underline text-lg font-medium">өзгөртүү</button>
+        <button class="delete-btn text-red-600 dark:text-red-400 hover:underline text-lg font-medium">өчүрүү</button>
+      </div>
+    `;
+
+    container.appendChild(row);
+  });
+
+  dom.taskList.appendChild(container);
+
+  // Окуялар
+  container.querySelectorAll('input[type="checkbox"]').forEach((chk, i) => {
+    chk.addEventListener('change', () => {
+      let tasks = loadTasks();
+      tasks[i].done = chk.checked;
+      saveTasks(tasks);
+      renderTasks();
+    });
+  });
+
+  container.querySelectorAll('.delete-btn').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      if (!confirm('Бул тапшырманы өчүрөсүңбү?')) return;
+      let tasks = loadTasks();
+      tasks.splice(i, 1);
+      saveTasks(tasks);
+      renderTasks();
+    });
+  });
+
+  container.querySelectorAll('.edit-btn').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      let tasks = loadTasks();
+      const newText = prompt('Тапшырманы өзгөртүү:', tasks[i].text);
+      if (newText !== null && newText.trim()) {
+        tasks[i].text = newText.trim();
+        saveTasks(tasks);
+        renderTasks();
+      }
+    });
+  });
+}
+
+function getCatColor(cat) {
+  const colors = {
+    work: '59,130,246',
+    home: '16,185,129',
+    study: '245,158,11',
+    personal: '236,72,153',
+    other: '107,114,128'
+  };
+  return colors[cat] || '107,114,128';
+}
+
+function getCatName(cat) {
+  const names = {
+    work: 'Иш',
+    home: 'Үй',
+    study: 'Окуу',
+    personal: 'Жеке',
+    other: 'Башка'
+  };
+  return names[cat] || 'Башка';
+}
+
+// =====================================================
+// ЖАҢЫ ТАПШЫРМА КОШУУ
+// =====================================================
+function addTask() {
+  const text = dom.taskInput.value.trim();
+  if (!text) {
+    alert('Тапшырма текстин жазыңыз');
+    return;
+  }
+
+  let tasks = loadTasks();
+  tasks.push({
+    text,
+    done: false,
+    priority: dom.prioritySelect.value,
+    category: dom.categorySelect.value,
+    deadline: dom.deadlineInput.value || null,
+    created: new Date().toISOString()
+  });
+
+  saveTasks(tasks);
+  dom.taskInput.value = '';
+  dom.deadlineInput.value = '';
+  renderTasks();
+}
+</script>
 </body>
 </html>
