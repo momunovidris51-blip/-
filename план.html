@@ -43,40 +43,7 @@
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
 
 <!-- Кирүү экраны – ар бир жолу сурайт (маймыл менен) -->
-<div id="loginScreen" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-    <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600 dark:text-indigo-400">
-      Планерге кириңиз
-    </h1>
 
-    <div class="space-y-6">
-      <div>
-        <label class="block text-xl mb-3 font-medium">Атыңыз</label>
-        <input id="nameInput" type="text" placeholder="Атыңызды жазыңыз" 
-               class="w-full px-5 py-5 text-xl border-2 dark:border-gray-600 rounded-2xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition" 
-               autocomplete="off" autofocus required />
-      </div>
-
-      <div class="relative">
-        <label class="block text-xl mb-3 font-medium">Сырсөз</label>
-        <input id="passInput" type="password" placeholder="Сырсөзүңүздү жазыңыз" 
-               class="w-full px-5 py-5 text-xl border-2 dark:border-gray-600 rounded-2xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition" 
-               autocomplete="off" required />
-        <!-- Маймыл эмодзи (көз алып салдым) -->
-        <span class="absolute right-5 top-12 text-3xl">🙈</span>
-      </div>
-
-      <button id="loginBtn" 
-              class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-2xl font-bold transition shadow-lg">
-        Кирүү
-      </button>
-
-      <p id="errorMsg" class="text-red-500 text-center text-lg hidden mt-2">
-        Атыңызды жана сырсөздү толтуруңуз
-      </p>
-    </div>
-  </div>
-</div>
 
 <!-- Негизги колдонмо -->
 <div id="mainApp" class="hidden">
