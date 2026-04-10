@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Планер – Жеке</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    input, button, select {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .task-row {
+      transition: all 0.18s ease;
+    }
+    .task-row:active {
+      transform: scale(0.98);
+    }
+    .task-done {
+      opacity: 0.65;
+      text-decoration: line-through;
+      background: rgba(16,185,129,0.08);
+    }
+    .overdue {
+      border-left: 6px solid #ef4444;
+      background: rgba(239,68,68,0.06);
+    }
+    @media (max-width: 640px) {
+      .add-form {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .add-form > * {
+        min-height: 56px;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+<!-- Кирүү экраны – ар бир жолу сурайт (маймыл менен) -->
+<div id="loginScreen" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
+    <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600 dark:text-indigo-400">
+      Планерге кириңиз
+    </h1>
+    <div class="space-y-6">
+      <div>
+        <label class="block text-xl mb-3 font-medium">Атыңыз</label>
+        <input id="nameInput" type="text" placeholder="Атыңызды жазыңыз"
+               class="w-full px-5 py-5 text-xl border-2 dark:border-gray-600 rounded-2xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition"
+               autocomplete="off" autofocus required />
+      </div>
+      <div class="relative">
+        <label class="block text-xl mb-3 font-medium">Сырсөз</label>
+        <input id="passInput" type="password" placeholder="Сырсөзүңүздү жазыңыз"
+               class="w-full px-5 py-5 text-xl border-2 dark:border-gray-600 rounded-2xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition"
+               autocomplete="off" required />
+        <!-- Маймыл эмодзи (көз алып салдым) -->
+        <span id="eyeIcon" class="absolute right-5 top-12 text-3xl cursor-pointer">🙈</span>
+      </div>
+      <button id="loginBtn"
+              class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-2xl font-bold transition shadow-lg">
+        Кирүү
+      </button>
+      <p id="errorMsg" class="text-red-500 text-center text-lg hidden mt-2">
+        Атыңызды жана сырсөздү толтуруңуз
+      </p>
+    </div>
+  </div>
+</div>
+<!-- Негизги колдонмо -->
+<div id="mainApp" class="hidden">
+  <header class="bg-white dark:bg-gray-900/95 backdrop-blur sticky top-0 z-20 border-b dark:border-gray-800 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+        Планер
+      </h1>
+      <div class="flex items-center gap-4">
+        <div id="userNameDisplay" class="text-xl font-medium text-gray-700 dark:text-gray-300">
+          Салам, ...
+        </div>
+        <button id="logoutBtn" class="text-xl font-medium text-gray-700 dark:text-gray-300 hover:underline">Чыгуу</button>
+        <button id="themeBtn" class="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-2xl transition">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-5xl mx-auto px-4 py-6 sm:py-10">
+    <!-- Көрүнүштөр -->
+    <div class="flex flex-wrap gap-3 mb-8 justify-center">
+      <button data-view="daily" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Күнүмдүк</button>
+      <button data-view="weekly" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Апталык</button>
+      <button data-view="monthly" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Айлык</button>
+      <button data-view="yearly" class="tab px-7 py-4 rounded-2xl text-lg sm:text-xl font-medium bg-gray-200 dark:bg-gray-700 hover:bg-indigo-600 hover:text-white data-[active=true]:bg-indigo-600 data-[active=true]:text-white transition shadow-md">Жылдык</button>
+    </div>
+    <!-- Дата -->
+    <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl border dark:border-gray-800 shadow-md mb-8">
+      <input type="date" id="datePicker" class="w-full border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500"/>
+    </div>
+    <!-- Прогресс -->
+    <div class="mb-8 bg-white dark:bg-gray-900 p-6 rounded-2xl border dark:border-gray-800 shadow-md">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
+        <h2 id="periodTitle" class="text-2xl sm:text-3xl font-bold"></h2>
+        <div class="flex items-center gap-5">
+          <span id="statsText" class="font-medium text-gray-600 dark:text-gray-400 text-xl"></span>
+          <div class="w-40 sm:w-56 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div id="progressBar" class="h-full bg-indigo-600 transition-all duration-500" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Тапшырма кошуу -->
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-2xl border dark:border-gray-800 shadow-md mb-8 add-form grid gap-5">
+      <input id="taskInput" placeholder="Жаңы тапшырма жазыңыз..."
+             class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500"/>
+     
+      <select id="prioritySelect" class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent">
+        <option value="low">Төмөн</option>
+        <option value="medium" selected>Орто</option>
+        <option value="high">Маанилүү</option>
+      </select>
+      <select id="categorySelect" class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent">
+        <option value="work">Иш</option>
+        <option value="home">Үй</option>
+        <option value="study">Окуу</option>
+        <option value="personal">Жеке</option>
+        <option value="other" selected>Башка</option>
+      </select>
+      <input type="date" id="deadlineInput" class="border dark:border-gray-700 rounded-2xl px-5 py-5 text-xl bg-transparent"/>
+      <button id="addButton" class="py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xl font-bold transition shadow-lg">
+        Кошуу
+      </button>
+    </div>
+    <!-- Тапшырмалар -->
+    <div id="taskList" class="space-y-5 pb-24 min-h-[60vh]"></div>
+  </main>
+  <footer class="text-center py-8 text-base text-gray-500 dark:text-gray-600 border-t dark:border-gray-800">
+    Бардык маалыматтар сиздин түзмөгүңүздө гана сакталат • 2026
+  </footer>
+</div>
+<script>
+// =====================================================
+// ГЛОБАЛДЫК ӨЗГӨРМӨЛӨР
+// =====================================================
+let currentView = 'daily';
+let selectedDate = new Date();
+let isDarkMode = localStorage.getItem('darkMode') === 'true';
+let currentUserName = '';
+// =====================================================
+// DOM ЭЛЕМЕНТТЕР
+// =====================================================
+const dom = {
+  loginScreen: document.getElementById('loginScreen'),
+  nameInput: document.getElementById('nameInput'),
+  passInput: document.getElementById('passInput'),
+  eyeIcon: document.getElementById('eyeIcon'),
+  loginBtn: document.getElementById('loginBtn'),
+  errorMsg: document.getElementById('errorMsg'),
+  mainApp: document.getElementById('mainApp'),
+  userNameDisplay: document.getElementById('userNameDisplay'),
+  logoutBtn: document.getElementById('logoutBtn'),
+  themeBtn: document.getElementById('themeBtn'),
+  datePicker: document.getElementById('datePicker'),
+  periodTitle: document.getElementById('periodTitle'),
+  statsText: document.getElementById('statsText'),
+  progressBar: document.getElementById('progressBar'),
+  taskList: document.getElementById('taskList'),
+  taskInput: document.getElementById('taskInput'),
+  prioritySelect: document.getElementById('prioritySelect'),
+  categorySelect: document.getElementById('categorySelect'),
+  deadlineInput: document.getElementById('deadlineInput'),
+  addButton: document.getElementById('addButton')
+};
+// =====================================================
+// КИРҮҮ ЛОГИКАСЫ
+// =====================================================
+dom.eyeIcon.addEventListener('click', () => {
+  const show = dom.passInput.type === 'password';
+  dom.passInput.type = show ? 'text' : 'password';
+  dom.eyeIcon.textContent = show ? '👀' : '🙈';
+});
+dom.loginBtn.addEventListener('click', () => {
+  const name = dom.nameInput.value.trim();
+  const password = dom.passInput.value.trim();
+  if (!name || password.length < 4) {
+    dom.errorMsg.textContent = !name ? "Атыңызды жазыңыз" : "Сырсөз кеминде 4 белгиден турушу керек";
+    dom.errorMsg.classList.remove('hidden');
+    return;
+  }
+  currentUserName = name;
+  localStorage.setItem('currentUserName', currentUserName);
+  dom.userNameDisplay.textContent = `Салам, ${currentUserName}`;
+  dom.loginScreen.classList.add('hidden');
+  dom.mainApp.classList.remove('hidden');
+  initializePlanner();
+});
+dom.passInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') dom.loginBtn.click();
+});
+
+// Авто-кирүү
+const savedUser = localStorage.getItem('currentUserName');
+if (savedUser) {
+  currentUserName = savedUser;
+  dom.userNameDisplay.textContent = `Салам, ${currentUserName}`;
+  dom.loginScreen.classList.add('hidden');
+  dom.mainApp.classList.remove('hidden');
+  initializePlanner();
+} else {
+  dom.nameInput.focus();
+}
+// =====================================================
+// КОЛДОНМОНУ БАШТОО
+// =====================================================
+function initializePlanner() {
+  applyTheme();
+  dom.datePicker.value = selectedDate.toISOString().slice(0, 10);
+  document.querySelector('[data-view="daily"]').dataset.active = 'true';
+  renderTasks();
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.dataset.active = 'false');
+      btn.dataset.active = 'true';
+      currentView = btn.dataset.view;
+      renderTasks();
+    });
+  });
+  dom.datePicker.addEventListener('change', () => {
+    selectedDate = new Date(dom.datePicker.value);
+    renderTasks();
+  });
+  dom.themeBtn.addEventListener('click', toggleTheme);
+  dom.addButton.addEventListener('click', addTask);
+  dom.taskInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') addTask();
+  });
+  dom.logoutBtn.addEventListener('click', () => {
+    if (confirm('Чыгууну каалайсызбы?')) {
+      localStorage.removeItem('currentUserName');
+      location.reload();
+    }
+  });
+}
+function applyTheme() {
+  // Системанын караңгы/жарык режимине жараша автоматтык баштоо
+  if (localStorage.getItem('darkMode') === null) {
+    isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    localStorage.setItem('darkMode', isDarkMode);
+  }
+  document.documentElement.classList.toggle('dark', isDarkMode);
+  dom.themeBtn.textContent = isDarkMode ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  isDarkMode = !isDarkMode;
+  localStorage.setItem('darkMode', isDarkMode);
+  applyTheme();
+}
+// =====================================================
+// САКТОО КЛЮЧУ – АР БИР КОЛДОНУУЧУ ҮЧҮН ӨЗҮНЧӨ
+// =====================================================
+function getUserKey() {
+  const base = currentUserName.toLowerCase().replace(/\s+/g, '_');
+  const y = selectedDate.getFullYear();
+  const m = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+  const day = selectedDate.getDate().toString().padStart(2, '0');
+  let period = '';
+  if (currentView === 'daily') period = `${y}-${m}-${day}`;
+  else if (currentView === 'weekly') period = `w${getWeek(selectedDate)}-${y}`;
+  else if (currentView === 'monthly') period = `m${m}-${y}`;
+  else period = `y${y}`;
+  return `plan_${base}_${currentView}_${period}`;
+}
+function getWeek(date) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return Math.round(((d - week1) / 86400000 + 1) / 7);
+}
+function getPeriodTitle() {
+  const d = new Date(selectedDate);
+  if (currentView === 'daily') return d.toLocaleDateString('ky-KG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  if (currentView === 'weekly') {
+    const start = new Date(d);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return `Апта — ${start.toLocaleDateString('ky-KG', {day:'numeric', month:'short'})} – ${end.toLocaleDateString('ky-KG', {day:'numeric', month:'short', year:'numeric'})}`;
+  }
+  if (currentView === 'monthly') return d.toLocaleDateString('ky-KG', { month: 'long', year: 'numeric' });
+  return `${d.getFullYear()} -жыл`;
+}
+// =====================================================
+// ТАПШЫРМАЛАР
+// =====================================================
+function loadTasks() {
+  const key = getUserKey();
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data).tasks || [] : [];
+}
+function saveTasks(tasks) {
+  const key = getUserKey();
+  localStorage.setItem(key, JSON.stringify({ tasks }));
+}
+function renderTasks() {
+  const tasks = loadTasks();
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  dom.periodTitle.textContent = getPeriodTitle();
+  dom.statsText.textContent = `${done} / ${total} • ${percent}%`;
+  dom.progressBar.style.width = `${percent}%`;
+  dom.taskList.innerHTML = total === 0
+    ? '<p class="text-center py-20 text-gray-500 dark:text-gray-600 text-xl font-medium">Тапшырма жок...</p>'
+    : '';
+  const container = document.createElement('div');
+  container.className = 'space-y-5';
+  tasks.forEach((task, index) => {
+    const overdue = task.deadline && !task.done && new Date(task.deadline) < new Date();
+    const row = document.createElement('div');
+    row.className = `task-row flex flex-col sm:flex-row gap-5 p-6 rounded-2xl border dark:border-gray-800 bg-white dark:bg-gray-900 shadow-md ${task.done ? 'task-done' : ''} ${overdue ? 'overdue' : ''}`;
+    row.innerHTML = `
+      <div class="flex items-center gap-5 flex-1">
+        <input type="checkbox" ${task.done ? 'checked' : ''} class="w-7 h-7 rounded text-indigo-600 focus:ring-indigo-500"/>
+        <div class="flex-1">
+          <p class="text-xl font-medium">${task.text}</p>
+          ${task.deadline ? `<p class="text-base text-gray-500 dark:text-gray-400 mt-1">Мөөнөт: ${new Date(task.deadline).toLocaleDateString('ky-KG')}</p>` : ''}
+        </div>
+        <span class="px-4 py-2 text-base rounded-full font-medium whitespace-nowrap"
+              style="background:rgba(${getCatColor(task.category)},0.2); color:rgb(${getCatColor(task.category)})">
+          ${getCatName(task.category)}
+        </span>
+      </div>
+      <div class="flex gap-6 mt-4 sm:mt-0">
+        <button class="edit-btn text-blue-600 dark:text-blue-400 hover:underline text-lg font-medium">өзгөртүү</button>
+        <button class="delete-btn text-red-600 dark:text-red-400 hover:underline text-lg font-medium">өчүрүү</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+  dom.taskList.appendChild(container);
+  // Окуялар
+  container.querySelectorAll('input[type="checkbox"]').forEach((chk, i) => {
+    chk.addEventListener('change', () => {
+      let tasks = loadTasks();
+      tasks[i].done = chk.checked;
+      saveTasks(tasks);
+      renderTasks();
+    });
+  });
+  container.querySelectorAll('.delete-btn').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      if (!confirm('Бул тапшырманы өчүрөсүңбү?')) return;
+      let tasks = loadTasks();
+      tasks.splice(i, 1);
+      saveTasks(tasks);
+      renderTasks();
+    });
+  });
+  container.querySelectorAll('.edit-btn').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      let tasks = loadTasks();
+      const newText = prompt('Тапшырманы өзгөртүү:', tasks[i].text);
+      if (newText !== null && newText.trim()) {
+        tasks[i].text = newText.trim();
+        saveTasks(tasks);
+        renderTasks();
+      }
+    });
+  });
+}
+function getCatColor(cat) {
+  const colors = {
+    work: '59,130,246',
+    home: '16,185,129',
+    study: '245,158,11',
+    personal: '236,72,153',
+    other: '107,114,128'
+  };
+  return colors[cat] || '107,114,128';
+}
+function getCatName(cat) {
+  const names = {
+    work: 'Иш',
+    home: 'Үй',
+    study: 'Окуу',
+    personal: 'Жеке',
+    other: 'Башка'
+  };
+  return names[cat] || 'Башка';
+}
+// =====================================================
+// ЖАҢЫ ТАПШЫРМА КОШУУ
+// =====================================================
+function addTask() {
+  const text = dom.taskInput.value.trim();
+  if (!text) {
+    alert('Тапшырма текстин жазыңыз');
+    return;
+  }
+  let tasks = loadTasks();
+  tasks.push({
+    text,
+    done: false,
+    priority: dom.prioritySelect.value,
+    category: dom.categorySelect.value,
+    deadline: dom.deadlineInput.value || null,
+    created: new Date().toISOString()
+  });
+  saveTasks(tasks);
+  dom.taskInput.value = '';
+  dom.deadlineInput.value = '';
+  renderTasks();
+}
+</script>
+</body>
+</html>
